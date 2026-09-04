@@ -7,8 +7,8 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #111; min-height: 100vh; }
-    
-    /* Image Grid - Preserves full image aspect ratios */
+
+    /* Responsive Grid displaying FULL, UNCROPPED images */
     .gallery {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -16,11 +16,12 @@
       padding: 20px;
       align-items: start;
     }
+    
     .gallery img {
       width: 100%;
-      height: auto;          /* Prevents cropping / stretching */
-      max-height: 90vh;     /* Keeps huge images within frame */
-      object-fit: contain;  /* Displays full image cleanly */
+      height: auto;
+      max-height: 90vh;
+      object-fit: contain; /* Ensures 100% full image visibility without cropping */
       border-radius: 4px;
       display: block;
     }
@@ -31,7 +32,7 @@
   <div class="gallery" id="gallery"></div>
 
   <script>
-    // List your local image filenames here (stored in the same directory/folder)
+    // Write your exact image filenames here:
     const images = [
       'art1.jpg',
       'art2.png',
@@ -40,7 +41,7 @@
 
     const gallery = document.getElementById('gallery');
 
-    // Automatically load all images from the folder
+    // Dynamically builds the full-size images from the root folder
     images.forEach(filename => {
       const img = document.createElement('img');
       img.src = `./${filename}`;
