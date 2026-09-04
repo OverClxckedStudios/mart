@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyWork Image Viewer</title>
+    <title>Image Viewer</title>
     <style>
         body {
             font-family: system-ui, sans-serif;
@@ -13,44 +13,26 @@
             padding: 20px;
         }
 
-        .controls {
-            margin-bottom: 20px;
+        h1 {
             text-align: center;
-        }
-
-        .file-label {
-            background-color: #2563eb;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .file-label:hover {
-            background-color: #1d4ed8;
-        }
-
-        input[type="file"] {
-            display: none;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
         }
 
         #gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 16px;
         }
 
         .image-container {
             background-color: #1e1e1e;
             border-radius: 8px;
-            padding: 8px;
+            padding: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 300px; /* Fixed container height */
-            overflow: hidden;
+            height: 300px; /* Adjust height as needed */
             border: 1px solid #333;
         }
 
@@ -59,51 +41,76 @@
             max-height: 100%;
             width: auto;
             height: auto;
-            object-fit: contain; /* Fits image fully without cropping */
+            object-fit: contain; /* Scales image without cropping */
             border-radius: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #aaa;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
-    <div class="controls">
-        <label for="folderInput" class="file-label">Select /MyWork Folder</label>
-        <input type="file" id="folderInput" webkitdirectory directory multiple>
-    </div>
-
-    <div id="gallery"></div>
+    <h1>Repository Images</h1>
+    <div id="gallery"><p class="loading">Loading images...</p></div>
 
     <script>
-        const folderInput = document.getElementById('folderInput');
-        const gallery = document.getElementById('gallery');
+        // CONFIGURATION: Replace these with your GitHub details
+        const REPO_OWNER = 'your-github-username';
+        const REPO_NAME = 'your-repo-name';
+        const FOLDER_PATH = 'path/to/folder'; // e.g., 'images' or leave as '' for repo root
 
-        folderInput.addEventListener('change', (event) => {
-            const files = event.target.files;
-            gallery.innerHTML = ''; // Clear existing gallery
+        // Supported image extensions
+        const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
 
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
+        async function loadGitHubImages() {
+            const gallery = document.getElementById('gallery');
+            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FOLDER_PATH}`;
 
-                // Check if the file is an image
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+                
+                const files = await response.json();
+                gallery.innerHTML = ''; // Clear loading message
 
-                    reader.onload = function(e) {
-                        const container = document.createElement('div');
-                        container.className = 'image-container';
+                let imageCount = 0;
 
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.alt = file.name;
+                files.forEach(file => {
+                    if (file.type === 'file') {
+                        const isImage = IMAGE_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext));
+                        
+                        if (isImage) {
+                            imageCount++;
+                            const container = document.createElement('div');
+                            container.className = 'image-container';
 
-                        container.appendChild(img);
-                        gallery.appendChild(container);
-                    };
+                            const img = document.createElement('img');
+                            // Use raw download URL to display image directly
+                            img.src = file.download_url; 
+                            img.alt = file.name;
+                            img.loading = 'lazy';
 
-                    reader.readAsDataURL(file);
+                            container.appendChild(img);
+                            gallery.appendChild(container);
+                        }
+                    }
+                });
+
+                if (imageCount === 0) {
+                    gallery.innerHTML = '<p class="loading">No images found in this folder.</p>';
                 }
+
+            } catch (error) {
+                gallery.innerHTML = `<p class="loading" style="color: #ff6b6b;">Error loading images: ${error.message}</p>`;
+                console.error(error);
             }
-        });
+        }
+
+        loadGitHubImages();
     </script>
 </body>
 </html>
