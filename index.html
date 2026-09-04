@@ -1,52 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title></title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #111; min-height: 100vh; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyWork Image Viewer</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
 
-    /* Responsive Grid displaying FULL, UNCROPPED images */
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-      padding: 20px;
-      align-items: start;
-    }
-    
-    .gallery img {
-      width: 100%;
-      height: auto;
-      max-height: 90vh;
-      object-fit: contain; /* Ensures 100% full image visibility without cropping */
-      border-radius: 4px;
-      display: block;
-    }
-  </style>
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .file-label {
+            background-color: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .file-label:hover {
+            background-color: #1d4ed8;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        #gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .image-container {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px; /* Fixed container height */
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain; /* Fits image fully without cropping */
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="gallery" id="gallery"></div>
+    <div class="controls">
+        <label for="folderInput" class="file-label">Select /MyWork Folder</label>
+        <input type="file" id="folderInput" webkitdirectory directory multiple>
+    </div>
 
-  <script>
-    // Write your exact image filenames here:
-    const images = [
-      'art1.jpg',
-      'art2.png',
-      'art3.webp'
-    ];
+    <div id="gallery"></div>
 
-    const gallery = document.getElementById('gallery');
+    <script>
+        const folderInput = document.getElementById('folderInput');
+        const gallery = document.getElementById('gallery');
 
-    // Dynamically builds the full-size images from the root folder
-    images.forEach(filename => {
-      const img = document.createElement('img');
-      img.src = `./${filename}`;
-      gallery.appendChild(img);
-    });
-  </script>
+        folderInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            gallery.innerHTML = ''; // Clear existing gallery
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                // Check if the file is an image
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+                        const container = document.createElement('div');
+                        container.className = 'image-container';
+
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = file.name;
+
+                        container.appendChild(img);
+                        gallery.appendChild(container);
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+    </script>
 </body>
 </html>
