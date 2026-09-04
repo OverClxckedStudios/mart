@@ -3,81 +3,428 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mart</title>
+  <title>Mart Gallery</title>
   <style>
-    body {
-      margin: 0;
-      background: #111;
-      color: #fff;
-      font-family: system-ui, sans-serif;
+    :root {
+      --bg-color: #0f0f11;
+      --card-bg: #18181c;
+      --card-border: #2a2a30;
+      --accent-color: #6366f1;
+      --accent-hover: #4f46e5;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --badge-vouched: #10b981;
+      --badge-unvouched: #f59e0b;
     }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header & Navigation */
+    header {
+      background-color: rgba(24, 24, 28, 0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--card-border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+    }
+
+    .nav-tabs {
+      display: flex;
+      background: #000;
+      padding: 4px;
+      border-radius: 10px;
+      gap: 4px;
+      border: 1px solid var(--card-border);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-color);
+      color: #fff;
+    }
+
+    .tab-btn:hover:not(.active) {
+      color: var(--text-main);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px;
+      flex: 1;
+    }
+
+    /* Status & Loading */
+    #status {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    /* Gallery Grid */
     #gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 16px;
-      padding: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
     }
-    .art-item img {
+
+    /* Card Styling */
+    .art-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .art-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .img-wrapper {
       width: 100%;
-      height: auto;
+      height: 220px;
+      background: #050505;
+      position: relative;
+    }
+
+    .img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-vouched {
+      background: var(--badge-vouched);
+      color: #000;
+    }
+
+    .badge-unvouched {
+      background: var(--badge-unvouched);
+      color: #000;
+    }
+
+    .card-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .vouch-message {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent-color);
+      margin-top: 4px;
+    }
+
+    /* Lightbox Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-content {
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    @media (min-width: 768px) {
+      .modal-body {
+        flex-direction: row;
+      }
+    }
+
+    .modal-img {
+      flex: 1;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-img img {
+      max-width: 100%;
+      max-height: 60vh;
       object-fit: contain;
     }
-    #status {
-      padding: 20px;
-      color: #ff6b6b;
-      font-weight: bold;
+
+    .modal-info {
+      padding: 24px;
+      width: 100%;
+      max-width: 350px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
   </style>
 </head>
 <body>
-  <div id="status">Loading...</div>
-  <div id="gallery"></div>
+
+  <header>
+    <div class="brand">Mart Gallery</div>
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('vouched')">Vouched</button>
+      <button class="tab-btn" onclick="switchTab('unvouched')">Unvouched</button>
+    </nav>
+  </header>
+
+  <main>
+    <div id="status">Loading items...</div>
+    <div id="gallery"></div>
+  </main>
+
+  <div id="lightbox" class="modal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-body">
+        <div class="modal-img">
+          <img id="modal-image" src="" alt="">
+        </div>
+        <div class="modal-info">
+          <h3 id="modal-title"></h3>
+          <div id="modal-vouch-container">
+            <strong>Vouch Note:</strong>
+            <p id="modal-vouch-text" class="vouch-message"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
-    async function loadArt() {
-      const status = document.getElementById('status');
-      const gallery = document.getElementById('gallery');
+    const CONFIG = {
+      username: 'OverClxckedStudios',
+      repo: 'mart'
+    };
 
-      const username = 'OverClxckedStudios';
-      const repo = 'mart';
-      
-      // Check both lowercase and uppercase folder names
-      const folderCandidates = ['images', 'Images', 'mart/images', 'mart/Images'];
+    let currentTab = 'vouched';
+    const cache = { vouched: [], unvouched: [] };
 
-      for (const folderPath of folderCandidates) {
-        try {
-          const res = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${folderPath}`);
-          
-          if (res.ok) {
-            const files = await res.json();
-            status.style.display = 'none';
-
-            let imageCount = 0;
-            files.forEach(file => {
-              if (file.type === 'file' && /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name)) {
-                const div = document.createElement('div');
-                div.className = 'art-item';
-                const img = document.createElement('img');
-                img.src = file.download_url;
-                img.alt = file.name;
-                div.appendChild(img);
-                gallery.appendChild(div);
-                imageCount++;
-              }
-            });
-
-            if (imageCount > 0) return; // Found images, exit function
-          }
-        } catch (e) {
-          // Continue to next path candidate
-        }
-      }
-
-      status.innerText = "Error 404: GitHub cannot find the folder. Ensure your images are inside a folder named 'images' directly in the root of the repo.";
+    // Sanitizes filename to clean title: "Example1.png" -> "Example 1"
+    function cleanTitle(filename) {
+      return filename
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[-_]/g, ' ')
+        .replace(/([a-z])([A-Z])/g, '$1 $2');
     }
 
-    loadArt();
+    // Fetches text vouch file corresponding to an image name
+    async function fetchVouchText(imageName) {
+      const baseName = imageName.substring(0, imageName.lastIndexOf('.'));
+      const textUrl = `https://raw.githubusercontent.com/${CONFIG.username}/${CONFIG.repo}/main/vouches/${baseName}.txt`;
+      
+      try {
+        const res = await fetch(textUrl);
+        if (res.ok) return await res.text();
+      } catch (e) {
+        console.warn(`No vouch text found for ${imageName}`);
+      }
+      return null;
+    }
+
+    async function loadCategory(category) {
+      const status = document.getElementById('status');
+      const gallery = document.getElementById('gallery');
+      
+      status.style.display = 'block';
+      status.innerText = `Loading ${category} items...`;
+      gallery.innerHTML = '';
+
+      if (cache[category].length > 0) {
+        renderGallery(cache[category]);
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${CONFIG.username}/${CONFIG.repo}/contents/${category}`);
+        if (!res.ok) throw new Error(`Could not access /${category} folder.`);
+
+        const files = await res.json();
+        const imageFiles = files.filter(f => f.type === 'file' && /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name));
+
+        if (imageFiles.length === 0) {
+          status.innerText = `No items found in /${category}.`;
+          return;
+        }
+
+        const items = await Promise.all(imageFiles.map(async (file) => {
+          let vouchText = null;
+          if (category === 'vouched') {
+            vouchText = await fetchVouchText(file.name);
+          }
+          return {
+            name: file.name,
+            title: cleanTitle(file.name),
+            url: file.download_url,
+            vouch: vouchText
+          };
+        }));
+
+        cache[category] = items;
+        renderGallery(items);
+
+      } catch (err) {
+        status.innerText = err.message || "Failed to load directory content.";
+      }
+    }
+
+    function renderGallery(items) {
+      const status = document.getElementById('status');
+      const gallery = document.getElementById('gallery');
+      
+      status.style.display = 'none';
+      gallery.innerHTML = '';
+
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'art-card';
+        card.onclick = () => openModal(item);
+
+        const badgeClass = currentTab === 'vouched' ? 'badge-vouched' : 'badge-unvouched';
+        const badgeText = currentTab === 'vouched' ? 'Vouched' : 'Unvouched';
+
+        card.innerHTML = `
+          <div class="img-wrapper">
+            <img src="${item.url}" alt="${item.title}" loading="lazy">
+            <span class="badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div class="card-body">
+            <div class="card-title">${item.title}</div>
+            ${item.vouch ? `<div class="vouch-message">"${item.vouch}"</div>` : ''}
+          </div>
+        `;
+        gallery.appendChild(card);
+      });
+    }
+
+    function switchTab(tab) {
+      if (currentTab === tab) return;
+      currentTab = tab;
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.toLowerCase() === tab);
+      });
+
+      loadCategory(tab);
+    }
+
+    function openModal(item) {
+      document.getElementById('modal-image').src = item.url;
+      document.getElementById('modal-title').innerText = item.title;
+      
+      const vouchContainer = document.getElementById('modal-vouch-container');
+      if (item.vouch) {
+        document.getElementById('modal-vouch-text').innerText = item.vouch;
+        vouchContainer.style.display = 'block';
+      } else {
+        vouchContainer.style.display = 'none';
+      }
+
+      document.getElementById('lightbox').classList.add('open');
+    }
+
+    function closeModal(event) {
+      document.getElementById('lightbox').classList.remove('open');
+    }
+
+    // Initial Load
+    loadCategory('vouched');
   </script>
 </body>
 </html>
