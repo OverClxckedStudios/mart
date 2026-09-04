@@ -1,116 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Viewer</title>
-    <style>
-        body {
-            font-family: system-ui, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-        }
-
-        #gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-        }
-
-        .image-container {
-            background-color: #1e1e1e;
-            border-radius: 8px;
-            padding: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 300px; /* Adjust height as needed */
-            border: 1px solid #333;
-        }
-
-        .image-container img {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            object-fit: contain; /* Scales image without cropping */
-            border-radius: 4px;
-        }
-
-        .loading {
-            text-align: center;
-            color: #aaa;
-            font-style: italic;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mart</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+    #gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      padding: 16px;
+    }
+    .art-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+  </style>
 </head>
 <body>
+  <div id="gallery"></div>
 
-    <h1>Repository Images</h1>
-    <div id="gallery"><p class="loading">Loading images...</p></div>
+  <script>
+    const USERNAME = 'YOUR_GITHUB_USERNAME'; // Replace with your GitHub username
+    const REPO = 'mart';
+    const FOLDER_PATH = 'images';
 
-    <script>
-        // CONFIGURATION: Replace these with your GitHub details
-        const REPO_OWNER = 'your-github-username';
-        const REPO_NAME = 'your-repo-name';
-        const FOLDER_PATH = 'path/to/folder'; // e.g., 'images' or leave as '' for repo root
+    async function loadArt() {
+      const gallery = document.getElementById('gallery');
+      try {
+        const res = await fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/${FOLDER_PATH}`);
+        const files = await res.json();
 
-        // Supported image extensions
-        const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+        files.forEach(file => {
+          if (file.type === 'file' && /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name)) {
+            const div = document.createElement('div');
+            div.className = 'art-item';
+            const img = document.createElement('img');
+            img.src = file.download_url;
+            img.alt = file.name;
+            div.appendChild(img);
+            gallery.appendChild(div);
+          }
+        });
+      } catch (err) {
+        console.error('Error fetching images:', err);
+      }
+    }
 
-        async function loadGitHubImages() {
-            const gallery = document.getElementById('gallery');
-            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FOLDER_PATH}`;
-
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
-                
-                const files = await response.json();
-                gallery.innerHTML = ''; // Clear loading message
-
-                let imageCount = 0;
-
-                files.forEach(file => {
-                    if (file.type === 'file') {
-                        const isImage = IMAGE_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext));
-                        
-                        if (isImage) {
-                            imageCount++;
-                            const container = document.createElement('div');
-                            container.className = 'image-container';
-
-                            const img = document.createElement('img');
-                            // Use raw download URL to display image directly
-                            img.src = file.download_url; 
-                            img.alt = file.name;
-                            img.loading = 'lazy';
-
-                            container.appendChild(img);
-                            gallery.appendChild(container);
-                        }
-                    }
-                });
-
-                if (imageCount === 0) {
-                    gallery.innerHTML = '<p class="loading">No images found in this folder.</p>';
-                }
-
-            } catch (error) {
-                gallery.innerHTML = `<p class="loading" style="color: #ff6b6b;">Error loading images: ${error.message}</p>`;
-                console.error(error);
-            }
-        }
-
-        loadGitHubImages();
-    </script>
+    loadArt();
+  </script>
 </body>
 </html>
