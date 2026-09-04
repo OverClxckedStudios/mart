@@ -6,56 +6,23 @@
   <title></title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #111; min-height: 100vh; font-family: sans-serif; }
+    body { background: #111; min-height: 100vh; }
     
-    /* Image Grid */
+    /* Image Grid - Preserves full image aspect ratios */
     .gallery {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 15px;
-      padding: 15px;
+      gap: 20px;
+      padding: 20px;
+      align-items: start;
     }
     .gallery img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
+      height: auto;          /* Prevents cropping / stretching */
+      max-height: 90vh;     /* Keeps huge images within frame */
+      object-fit: contain;  /* Displays full image cleanly */
       border-radius: 4px;
       display: block;
-    }
-
-    /* Admin Trigger (Invisible button bottom-right) */
-    #admin-trigger {
-      position: fixed;
-      bottom: 0;
-      right: 0;
-      width: 30px;
-      height: 30px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-    }
-
-    /* Admin Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #222;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.8);
-      z-index: 100;
-    }
-    .modal.active { display: flex; flex-direction: column; gap: 10px; }
-    .modal input[type="file"] { color: #fff; }
-    .modal button {
-      padding: 8px 16px;
-      background: #fff;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
     }
   </style>
 </head>
@@ -63,60 +30,22 @@
 
   <div class="gallery" id="gallery"></div>
 
-  <button id="admin-trigger" onclick="toggleAdmin()"></button>
-
-  <div class="modal" id="admin-panel">
-    <input type="file" id="image-input" accept="image/*">
-    <button onclick="addImage()">+</button>
-  </div>
-
   <script>
+    // List your local image filenames here (stored in the same directory/folder)
+    const images = [
+      'art1.jpg',
+      'art2.png',
+      'art3.webp'
+    ];
+
     const gallery = document.getElementById('gallery');
-    const adminPanel = document.getElementById('admin-panel');
-    const imageInput = document.getElementById('image-input');
 
-    // Load saved images on page startup
-    document.addEventListener('DOMContentLoaded', () => {
-      const savedImages = JSON.parse(localStorage.getItem('portfolio_images') || '[]');
-      savedImages.forEach(src => renderImage(src));
-    });
-
-    // Toggle admin panel visibility
-    function toggleAdmin() {
-      adminPanel.classList.toggle('active');
-    }
-
-    // Process image file and save
-    function addImage() {
-      const file = imageInput.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const base64Image = e.target.result;
-        
-        // Save to LocalStorage
-        const savedImages = JSON.parse(localStorage.getItem('portfolio_images') || '[]');
-        savedImages.push(base64Image);
-        localStorage.getItem('portfolio_images');
-        try {
-          localStorage.setItem('portfolio_images', JSON.stringify(savedImages));
-          renderImage(base64Image);
-          imageInput.value = '';
-          toggleAdmin();
-        } catch (err) {
-          alert('Storage full. Try uploading a smaller image.');
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // Display image on the page
-    function renderImage(src) {
+    // Automatically load all images from the folder
+    images.forEach(filename => {
       const img = document.createElement('img');
-      img.src = src;
+      img.src = `./${filename}`;
       gallery.appendChild(img);
-    }
+    });
   </script>
 </body>
 </html>
